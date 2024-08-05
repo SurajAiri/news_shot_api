@@ -91,11 +91,10 @@ async function handleViewAllUsers(req, res) {
     .skip((page - 1) * limit)
     .limit(Number(limit))
     .then((users) =>
-      res.sendResponse(200, {
+      res.sendResponse(200, users, null, {
         totalUsers,
         totalPages: Math.ceil(totalUsers / limit),
         currentPage: Number(page),
-        users,
       })
     )
     .catch((error) => {
