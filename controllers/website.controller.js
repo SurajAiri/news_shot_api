@@ -2,14 +2,13 @@
 // add category, update category
 // create category, delete category (websiteId required)
 
-const { restrictUserPermission } = require("../middlewares/auth.middlewares");
 const {
   WebsiteModel,
   WebsiteCategoryModel,
 } = require("../models/website.model");
 
 // website apis
-async function handleWebsiteCreate(req, res) {
+async function handleCreateWebsite(req, res) {
   try {
     const body = req.body;
 
@@ -63,7 +62,7 @@ async function handleWebsiteCreate(req, res) {
   }
 }
 
-const handleWebsiteGetAll = async (req, res) => {
+const handleGetAllWebsite = async (req, res) => {
   console.log("Get all websites");
   const { limit = 10, page = 1 } = req.query;
   try {
@@ -101,7 +100,7 @@ const handleWebsiteGetAll = async (req, res) => {
   }
 };
 
-async function handleWebsiteGetById(req, res) {
+async function handleGetWebsiteById(req, res) {
   const websiteId = req.params.websiteId;
   if (!websiteId) {
     return res.sendResponse(400, "Website ID is required");
@@ -120,7 +119,7 @@ async function handleWebsiteGetById(req, res) {
     });
 }
 
-async function handleWebsiteUpdate(req, res) {
+async function handleUpdateWebsite(req, res) {
   const websiteId = req.params.websiteId;
   if (!websiteId) {
     return res.sendResponse(400, "Website ID is required");
@@ -145,7 +144,7 @@ async function handleWebsiteUpdate(req, res) {
     });
 }
 
-async function handleWebsiteDelete(req, res) {
+async function handleDeleteWebsite(req, res) {
   const websiteId = req.params.websiteId;
   if (!websiteId) {
     return res.sendResponse(400, "Website ID is required");
@@ -176,26 +175,6 @@ async function handleGetAllWebsiteCategories(req, res) {
   }
 }
 
-async function handleGetAllCategoriesOfWebsite(req, res) {
-  const websiteId = req.params.websiteId;
-  if (!websiteId) {
-    return res.sendResponse(400, "Website ID is required");
-  }
-
-  await WebsiteModel.findById(websiteId)
-    .populate("categories", "name url")
-    .then((website) => {
-      if (!website) {
-        return res.sendResponse(404, "Website not found");
-      }
-      return res.sendResponse(200, website.categories);
-    })
-    .catch((error) => {
-      console.error("Error getting website categories:", error);
-      return res.sendResponse(500, error.message);
-    });
-}
-
 async function handleGetWebsiteCategoryById(req, res) {
   const categoryId = req.params.categoryId;
   if (!categoryId) {
@@ -215,22 +194,6 @@ async function handleGetWebsiteCategoryById(req, res) {
     });
 }
 
-async function handleCreateWebsiteCategory(req, res) {
-  const body = req.body;
-  if (!body.name || !body.url)
-    return res.sendResponse(400, "Invalid category data");
-
-  body.url = body.url.trim().toLowerCase();
-  const existingCategory = await WebsiteCategoryModel.findOne({
-    url: body.url,
-  });
-  if (existingCategory) return res.sendResponse(400, "Category already exists");
-  await WebsiteCategoryModel.create(body).then((data) =>
-    res.sendResponse(201, data)
-  );
-}
-
-// update category
 async function handleUpdateWebsiteCategory(req, res) {
   const categoryId = req.params.categoryId;
   if (!categoryId) {
@@ -247,25 +210,6 @@ async function handleUpdateWebsiteCategory(req, res) {
     })
     .catch((error) => {
       console.error("Update Category: ", error);
-      return res.sendResponse(500, error.message);
-    });
-}
-// delete category
-async function handleDeleteWebsiteCategory(req, res) {
-  const categoryId = req.params.categoryId;
-  if (!categoryId) {
-    return res.sendResponse(400, "Category ID is required");
-  }
-
-  await WebsiteCategoryModel.findByIdAndDelete(categoryId)
-    .then((deletedCategory) => {
-      if (!deletedCategory) {
-        return res.sendResponse(404, "Category not found");
-      }
-      return res.sendResponse(200, { message: "Category deleted" });
-    })
-    .catch((error) => {
-      console.error("Delete Category: ", error);
       return res.sendResponse(500, error.message);
     });
 }
@@ -304,18 +248,44 @@ async function handleRemoveAndDeleteWebsiteCategory(req, res) {
     });
 }
 
+async function handleAddAndCreateWebsiteCategory(req, res) {
+  const { websiteId } = req.params;
+  const body = req.body;
+
+  if (!body.name || !body.url)
+    return res.sendResponse(400, "Invalid category data");
+  if (!websiteId)
+    return res.sendResponse(400, "Website ID and Category ID are required");
+
+  if (body.url) body.url = body.url.trim().toLowerCase();
+
+  let web = await WebsiteModel.findById(websiteId);
+  if (!web) return res.sendResponse(404, "Website not found");
+
+  // create category
+  try {
+    WebsiteCategoryModel.create(body).then((cat) => {
+      web.categories.push(cat._id);
+      web.save();
+    });
+    return res.sendResponse(201, "Category created");
+  } catch (err) {
+    console.log(err);
+    return res.sendResponse(500, "Server error");
+  }
+}
+
 module.exports = {
-  handleWebsiteCreate,
-  handleWebsiteGetAll,
-  handleWebsiteGetById,
-  handleWebsiteUpdate,
-  handleWebsiteDelete,
+  handleCreateWebsite,
+  handleGetAllWebsite,
+  handleGetWebsiteById,
+  handleUpdateWebsite,
+  handleDeleteWebsite,
+
   // website categories
   handleGetAllWebsiteCategories,
-  handleGetAllCategoriesOfWebsite,
   handleGetWebsiteCategoryById,
-  handleCreateWebsiteCategory,
   handleUpdateWebsiteCategory,
-  handleDeleteWebsiteCategory,
   handleRemoveAndDeleteWebsiteCategory,
+  handleAddAndCreateWebsiteCategory,
 };

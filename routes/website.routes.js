@@ -1,16 +1,14 @@
 const {
-  handleWebsiteCreate,
-  handleWebsiteGetAll,
-  handleWebsiteGetById,
-  handleWebsiteUpdate,
-  handleWebsiteDelete,
-  handleGetAllCategoriesOfWebsite,
   handleGetWebsiteCategoryById,
   handleGetAllWebsiteCategories,
-  handleCreateWebsiteCategory,
   handleUpdateWebsiteCategory,
-  handleDeleteWebsiteCategory,
   handleRemoveAndDeleteWebsiteCategory,
+  handleGetAllWebsite,
+  handleCreateWebsite,
+  handleGetWebsiteById,
+  handleUpdateWebsite,
+  handleDeleteWebsite,
+  handleAddAndCreateWebsiteCategory,
 } = require("../controllers/website.controller");
 const { restrictUserPermission } = require("../middlewares/auth.middlewares");
 
@@ -21,29 +19,25 @@ router = express.Router();
 // // add category, update category, delete category
 
 // get all, create
-router
-  .route("/category")
-  .get(handleGetAllWebsiteCategories)
-  .post(handleCreateWebsiteCategory);
+router.route("/category").get(handleGetAllWebsiteCategories);
+router.post("/category/:websiteId", handleAddAndCreateWebsiteCategory);
 
 router.delete(
   "/category/:websiteId/:categoryId",
   handleRemoveAndDeleteWebsiteCategory
 );
 
-router.get("/category/w/:websiteId", handleGetAllCategoriesOfWebsite);
 router
   .route("/category/:categoryId")
   .get(handleGetWebsiteCategoryById)
   .patch(handleUpdateWebsiteCategory);
-// .delete(handleDeleteWebsiteCategory);
 
 router
   .route("/")
-  .get(handleWebsiteGetAll)
+  .get(handleGetAllWebsite)
   .post(
     restrictUserPermission(["admin", "summarizer", "verifier"]),
-    handleWebsiteCreate
+    handleCreateWebsite
   );
 
 router
@@ -51,13 +45,8 @@ router
     "/:websiteId",
     restrictUserPermission(["admin", "summarizer", "verifier"])
   )
-  .get(handleWebsiteGetById)
-  .patch(handleWebsiteUpdate);
-
-router.delete(
-  "/:websiteId",
-  restrictUserPermission(["admin"]),
-  handleWebsiteDelete
-);
+  .get(handleGetWebsiteById)
+  .patch(handleUpdateWebsite)
+  .delete(restrictUserPermission(["admin"]), handleDeleteWebsite);
 
 module.exports = router;
