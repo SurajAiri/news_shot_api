@@ -1,6 +1,10 @@
 // category apis -> get all categories, get specific category, create category, update category, delete category
 
+const { newsCategoryModel } = require("../../models/news.model");
+const { MAX_CATEGORY_NAME_LENGTH } = require("../../utils/constant");
+
 exports.getAllCategories = async () => {
+  console.log("service call getAllCategories");
   return await newsCategoryModel.find().exec();
 };
 

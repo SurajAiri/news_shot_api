@@ -33,7 +33,7 @@ const newsMediaSchema = new mongoose.Schema(
 );
 
 const newsCategorySchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, maxlength: 50 },
 });
 
 const newsReferenceSchema = new mongoose.Schema({

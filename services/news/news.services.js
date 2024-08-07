@@ -4,6 +4,9 @@ const {
   newsModel,
 } = require("../../models/news.model");
 
+const categoryServices = require("./_category.services");
+const mediaServices = require("./_media.services");
+
 // news apis -> create news, update news, get all news, get specific news, verify news, publish news
 exports.createNews = async (newsData) => {
   const session = await mongoose.startSession();
@@ -71,14 +74,44 @@ exports.deleteNews = async (newsId) => {
   }
 };
 
+exports.getAllNews = async (query) => {
+  const {
+    category = null,
+    page = API_RESPONSE_PAGE,
+    limit = API_RESPONSE_LIMIT,
+  } = query;
+
+  // Initialize the query object
+  let newsQuery = {};
+
+  // If a category is provided, filter by category
+  if (category) {
+    newsQuery.category = category;
+  }
+
+  return await newsModel
+    .find(newsQuery)
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .exec();
+};
+
+exports.getNewsById = async (newsId) => {
+  return await newsModel.findById(newsId).exec();
+};
+
+exports.updateNews = async (newsId, news) => {
+  return await newsModel.findByIdAndUpdate(newsId, news, { new: true }).exec();
+};
+
+exports.updateMedia = async (mediaId, media) => {
+  return await newsMediaModel
+    .findByIdAndUpdate(mediaId, media, { new: true })
+    .exec();
+};
+
 // action apis -> get all actions, get specific action
 // todo: implement later (skip for now)
-
-// summary apis -> get all summaries, get specific summary, create summary, update summary, delete summary
-
-// exports.createSummary = async (summary) => {
-//   return await newsSummaryModel.create(summary);
-// };
 
 exports.updateSummary = async (summaryId, summary) => {
   return await newsSummaryModel
@@ -86,21 +119,22 @@ exports.updateSummary = async (summaryId, summary) => {
     .exec();
 };
 
-// exports.deleteSummary = async (summaryId) => {
-//   return await newsSummaryModel.findByIdAndDelete(summaryId).exec();
-// };
-
-// reference: create and add to news, delete and remove from news, update reference
-// exports.createReference = async (reference) => {
-//   return await newsReferenceModel.create(reference);
-// };
-
-// exports.deleteReference = async (referenceId) => {
-//   return await newsReferenceModel.findByIdAndDelete(referenceId).exec();
-// };
-
 exports.updateReference = async (referenceId, reference) => {
   return await newsReferenceModel.findByIdAndUpdate(referenceId, reference, {
     new: true,
   });
 };
+
+// category: get all categories, get specific category, create category, update category, delete category
+exports.getAllCategories = categoryServices.getAllCategories;
+exports.getCategoryById = categoryServices.getCategoryById;
+exports.updateCategory = categoryServices.updateCategory;
+exports.deleteCategory = categoryServices.deleteCategory;
+exports.createCategory = categoryServices.createCategory;
+
+// media: get all media, get specific media, create media, update media, delete media
+exports.createNewsMedia = mediaServices.createNewsMedia;
+exports.getAllMedia = mediaServices.getAllMedia;
+exports.getMediaById = mediaServices.getMediaById;
+exports.updateMedia = mediaServices.updateMedia;
+exports.deleteMedia = mediaServices.deleteMedia;
