@@ -4,27 +4,35 @@ exports.getAllCategoriesController = async (req, res) => {
   console.log("getAllCategoriesController");
   try {
     const categories = await newsService.getAllCategories();
-    res.status(200).json(categories);
+    if (!categories || categories.length === 0) {
+      res.sendResponse(404, "No categories found");
+    } else {
+      res.sendResponse(200, categories);
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
 exports.getCategoryByIdController = async (req, res) => {
   try {
     const category = await newsService.getCategoryById(req.params.id);
-    res.status(200).json(category);
+    if (!category) {
+      res.sendResponse(404, "Category not found");
+    } else {
+      res.sendResponse(200, category);
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
 exports.createCategoryController = async (req, res) => {
   try {
     const category = await newsService.createCategory(req.body.name);
-    res.status(201).json(category);
+    res.sendResponse(201, category);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
@@ -34,17 +42,25 @@ exports.updateCategoryController = async (req, res) => {
       req.params.id,
       req.body.name
     );
-    res.status(200).json(category);
+    if (!category) {
+      res.sendResponse(404, "Category not found");
+    } else {
+      res.sendResponse(200, category);
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
 exports.deleteCategoryController = async (req, res) => {
   try {
-    await newsService.deleteCategory(req.params.id);
-    res.sendResponse(204, "Category deleted successfully");
+    const result = await newsService.deleteCategory(req.params.id);
+    if (!result) {
+      res.sendResponse(404, "Category not found");
+    } else {
+      res.sendResponse(200, "Category deleted successfully");
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };

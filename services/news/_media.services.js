@@ -1,7 +1,15 @@
 const { newsMediaModel } = require("../../models/news.model");
+const {
+  API_RESPONSE_PAGE,
+  API_RESPONSE_LIMIT,
+} = require("../../utils/constant");
 
 // media apis -> get all media, get specific media, create media, update media, delete media
 exports.createNewsMedia = async (media) => {
+  console.log(media);
+  if (!media.uploadedBy) {
+    throw new Error("Media must have an uploadedBy field.");
+  }
   return await newsMediaModel.create(media);
 };
 

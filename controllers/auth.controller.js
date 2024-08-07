@@ -70,7 +70,7 @@ async function handleUserUpdate(req, res) {
 // change password
 async function handleUserPasswordChange(req, res) {
   const userId = req.user?.id;
-  console.log(req.user);
+  // console.log(req.user);
   const { currentPassword, newPassword } = req.body;
 
   if (!userId) return res.sendResponse(400, "Authentication required");

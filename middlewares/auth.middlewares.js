@@ -16,7 +16,7 @@ function checkForAuthorization(req, res, next) {
   next();
 }
 
-function restrictUserPermission(roles = []) {
+function restrictUserPermission(roles = ["summarizer", "verifier", "admin"]) {
   return (req, res, next) => {
     if (!roles.includes(req.user?.role)) {
       return res.sendResponse(403, "Permission denied");

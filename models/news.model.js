@@ -26,7 +26,11 @@ const newsMediaSchema = new mongoose.Schema(
     },
     type: { type: String, required: true, enum: ["image", "video"] },
     thumbnailUrl: { type: String, match: /^https?:\/\/.*/ },
-    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     tags: [{ type: String, index: true }],
   },
   { timestamps: true }

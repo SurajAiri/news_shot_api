@@ -1,8 +1,13 @@
+const { default: mongoose } = require("mongoose");
 const {
   newsSummaryModel,
   newsReferenceModel,
   newsModel,
 } = require("../../models/news.model");
+const {
+  API_RESPONSE_PAGE,
+  API_RESPONSE_LIMIT,
+} = require("../../utils/constant");
 
 const categoryServices = require("./_category.services");
 const mediaServices = require("./_media.services");
@@ -15,19 +20,27 @@ exports.createNews = async (newsData) => {
   try {
     const { summary, reference, ...newsFields } = newsData;
 
+    // Ensure summary and reference are arrays
+    if (!Array.isArray(summary) || summary.length === 0) {
+      throw new Error("Summary must be a non-empty array.");
+    }
+    if (!Array.isArray(reference) || reference.length === 0) {
+      throw new Error("Reference must be a non-empty array.");
+    }
+
     // Create summary
-    const createdSummary = await newsSummaryModel.create([summary], {
+    const createdSummaries = await newsSummaryModel.create(summary, {
       session,
     });
 
     // Create reference
-    const createdReference = await newsReferenceModel.create([reference], {
+    const createdReferences = await newsReferenceModel.create(reference, {
       session,
     });
 
     // Add summary and reference ObjectIds to news
-    newsFields.summary = createdSummary.map((item) => item._id);
-    newsFields.reference = createdReference[0]._id;
+    newsFields.summary = createdSummaries.map((item) => item._id);
+    newsFields.reference = createdReferences[0]._id;
 
     // Create news
     const news = await newsModel.create([newsFields], { session });

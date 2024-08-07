@@ -19,7 +19,11 @@ app.get("/", (req, res) =>
 // s meaning staff, a meaning admin, u meaning user
 app.use("/api/v1/website", require("./routes/website.routes"));
 app.use("/api/v1/auth", require("./routes/auth.routes"));
-app.use("/api/v1/news", require("./routes/news.routes"));
+app.use(
+  "/api/v1/news",
+  restrictUserPermission(["summarizer", "verifier", "admin"]),
+  require("./routes/news.routes")
+);
 app.use(
   "/api/v1/admin/user",
   restrictUserPermission(["admin"]),

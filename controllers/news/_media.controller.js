@@ -2,45 +2,67 @@ const newsService = require("../../services/news/news.services.js");
 
 exports.createMediaController = async (req, res) => {
   try {
-    const media = await newsService.createNewsMedia(req.body);
-    res.status(201).json(media);
+    if (!req.user.id) {
+      return res.sendResponse(403, "Permission denied");
+    }
+    const media = await newsService.createNewsMedia({
+      uploadedBy: req.user.id,
+      ...req.body,
+    });
+    res.sendResponse(201, media);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
 exports.getAllMediaController = async (req, res) => {
   try {
     const media = await newsService.getAllMedia(req.query);
-    res.status(200).json(media);
+    if (!media || media.length === 0) {
+      res.sendResponse(404, "No media found");
+    } else {
+      res.sendResponse(200, media);
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
 exports.getMediaByIdController = async (req, res) => {
   try {
     const media = await newsService.getMediaById(req.params.id);
-    res.status(200).json(media);
+    if (!media) {
+      res.sendResponse(404, "Media not found");
+    } else {
+      res.sendResponse(200, media);
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
 exports.updateMediaController = async (req, res) => {
   try {
     const media = await newsService.updateMedia(req.params.id, req.body);
-    res.status(200).json(media);
+    if (!media) {
+      res.sendResponse(404, "Media not found");
+    } else {
+      res.sendResponse(200, media);
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
 
 exports.deleteMediaController = async (req, res) => {
   try {
-    await newsService.deleteMedia(req.params.id);
-    res.status(204).send({ message: "Media deleted successfully" });
+    const result = await newsService.deleteMedia(req.params.id);
+    if (!result) {
+      res.sendResponse(404, "Media not found");
+    } else {
+      res.sendResponse(200, "Media deleted successfully");
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.sendResponse(500, error.message);
   }
 };
