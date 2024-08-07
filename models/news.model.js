@@ -4,9 +4,9 @@ const supportedLanguages = ["en"];
 const supportedActions = ["create", "update", "summary", "verify", "publish"];
 const newsLevels = ["general", "trendy", "major"];
 
-// index on language
+// Index on language
 const newSummarySchema = new mongoose.Schema({
-  title: { type: String, required: true },
+  title: { type: String, required: true, maxlength: 200 },
   language: {
     type: String,
     enum: supportedLanguages,
@@ -18,11 +18,16 @@ const newSummarySchema = new mongoose.Schema({
 
 const newsMediaSchema = new mongoose.Schema(
   {
-    url: { type: String, required: true }, // URL of the media (image/video)
-    type: { type: String, required: true, enum: ["image", "video"] }, // Type of media
-    thumbnailUrl: { type: String }, // Optional thumbnail URL
-    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Reference to the admin who uploaded/selected the media
-    tags: [{ type: String, index: true }], // Array of tags for search and categorization
+    url: {
+      type: String,
+      required: true,
+      match: /^https?:\/\/.*/,
+      unique: true,
+    },
+    type: { type: String, required: true, enum: ["image", "video"] },
+    thumbnailUrl: { type: String, match: /^https?:\/\/.*/ },
+    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    tags: [{ type: String, index: true }],
   },
   { timestamps: true }
 );
@@ -32,9 +37,9 @@ const newsCategorySchema = new mongoose.Schema({
 });
 
 const newsReferenceSchema = new mongoose.Schema({
-  url: { type: String, required: true }, // article url
-  source: { type: String, required: true }, // website url
-  author: { type: String, required: true },
+  url: { type: String, required: true, match: /^https?:\/\/.*/, unique: true },
+  source: { type: String, required: true },
+  author: { type: String, required: true, maxlength: 100 },
   publishDate: { type: Date, required: true },
   language: {
     type: String,
@@ -54,10 +59,10 @@ const newsActionSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const newsMediaModel = mongoose.model("News_Media", newsMediaSchema);
-const newsSummaryModel = mongoose.model("News_Summary", newSummarySchema);
-const newsCategoryModel = mongoose.model("News_Category", newsCategorySchema);
 const newsActionModel = mongoose.model("News_Action", newsActionSchema);
+const newsMediaModel = mongoose.model("News_Media", newsMediaSchema);
+const newsCategoryModel = mongoose.model("News_Category", newsCategorySchema);
+const newsSummaryModel = mongoose.model("News_Summary", newSummarySchema);
 const newsReferenceModel = mongoose.model(
   "News_Reference",
   newsReferenceSchema
@@ -72,8 +77,16 @@ const newsSchema = new mongoose.Schema(
       selectedIndex: { type: Number, default: -1 },
     },
     newsLevel: { type: String, enum: newsLevels },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: "News_Category" },
-    reference: { type: mongoose.Schema.Types.ObjectId, ref: "News_Reference" },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "News_Category",
+      required: true,
+    },
+    reference: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "News_Reference",
+      required: true,
+    },
     actions: [{ type: mongoose.Schema.Types.ObjectId, ref: "News_Action" }],
   },
   { timestamps: true }
