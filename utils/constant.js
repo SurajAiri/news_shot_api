@@ -1,0 +1,2 @@
+const API_RESPONSE_LIMIT = 10;
+const API_RESPONSE_PAGE = 1;
