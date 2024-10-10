@@ -1,8 +1,5 @@
 const { newsMediaModel } = require("../../models/news.model");
-const {
-  API_RESPONSE_PAGE,
-  API_RESPONSE_LIMIT,
-} = require("../../utils/constant");
+const constants = require("../../utils/constant");
 
 // media apis -> get all media, get specific media, create media, update media, delete media
 exports.createNewsMedia = async (media) => {
@@ -14,21 +11,25 @@ exports.createNewsMedia = async (media) => {
 };
 
 exports.getAllMedia = async (query) => {
+  let { tag = null } = query;
   const {
-    tag = null,
-    page = API_RESPONSE_PAGE,
-    limit = API_RESPONSE_LIMIT,
+    page = constants.API_RESPONSE_PAGE,
+    limit = constants.API_RESPONSE_LIMIT,
   } = query;
-
   // Initialize the query object
   let mediaQuery = {};
 
   // If a tag is provided, filter by tags
   if (tag) {
     tag = tag.toLowerCase();
-    const tagsArray = tag.split(","); // Convert comma-separated tags into an array
-    mediaQuery.tags = { $in: tagsArray }; // Filter documents where tags array contains any of the provided tags
+    // const tagsArray = tag.split(","); // Convert comma-separated tags into an array
+    // mediaQuery.tags = { $in: tagsArray }; // Filter documents where tags array contains any of the provided tags
+    const tagsArray = tag
+      .split(",")
+      .map((tagItem) => new RegExp(`^${tagItem}`, "i")); // Create regex for each tag
+    mediaQuery.tags = { $in: tagsArray }; // Filter documents where tags array contains any of the provided tags (partial match)
   }
+  console.log(mediaQuery);
 
   return await newsMediaModel
     .find(mediaQuery)

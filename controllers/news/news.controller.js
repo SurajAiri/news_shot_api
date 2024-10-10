@@ -1,3 +1,4 @@
+const { newsModel } = require("../../models/news.model");
 const {
   createNews,
   deleteNews,
@@ -5,6 +6,10 @@ const {
   getAllNews,
   getNewsById,
 } = require("../../services/news/news.services");
+const {
+  API_RESPONSE_PAGE,
+  API_RESPONSE_LIMIT,
+} = require("../../utils/constant");
 const categoryController = require("./_category.controller");
 const mediaController = require("./_media.controller");
 
@@ -33,11 +38,25 @@ exports.deleteNewsController = async (req, res) => {
 
 exports.getAllNewsController = async (req, res) => {
   try {
+    const {
+      // tag = null,
+      category = null,
+      page = API_RESPONSE_PAGE,
+      limit = API_RESPONSE_LIMIT,
+    } = req.query;
+    totalNews = await newsModel.countDocuments();
     const news = await getAllNews(req.query);
     if (!news || news.length === 0) {
       res.sendResponse(404, "No news found");
     } else {
-      res.sendResponse(200, news);
+      res.sendResponse(200, news, "success", {
+        page,
+        limit,
+        totalNews,
+        totalPages: Math.ceil(totalNews / limit),
+        // tag,
+        category,
+      });
     }
   } catch (error) {
     res.sendResponse(500, error.message);

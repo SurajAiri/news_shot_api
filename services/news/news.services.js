@@ -13,9 +13,52 @@ const categoryServices = require("./_category.services");
 const mediaServices = require("./_media.services");
 
 // news apis -> create news, update news, get all news, get specific news, verify news, publish news
+// exports.createNews = async (newsData) => {
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+
+//   try {
+//     const { summary, reference, ...newsFields } = newsData;
+
+//     // Ensure summary and reference are arrays
+//     if (!Array.isArray(summary) || summary.length === 0) {
+//       throw new Error("Summary must be a non-empty array.");
+//     }
+//     if (!Array.isArray(reference) || reference.length === 0) {
+//       throw new Error("Reference must be a non-empty array.");
+//     }
+
+//     // Create summary
+//     const createdSummaries = await newsSummaryModel.create(summary, {
+//       session,
+//     });
+
+//     // Create reference
+//     const createdReferences = await newsReferenceModel.create(reference, {
+//       session,
+//     });
+
+//     // Add summary and reference ObjectIds to news
+//     newsFields.summary = createdSummaries.map((item) => item._id);
+//     newsFields.reference = createdReferences.map((item) => item._id);
+
+//     // Create news
+//     const news = await newsModel.create([newsFields], { session });
+
+//     await session.commitTransaction();
+//     session.endSession();
+
+//     return news[0];
+//   } catch (error) {
+//     await session.abortTransaction();
+//     session.endSession();
+//     throw new Error(`Failed to create news: ${error.message}`);
+//   }
+// };
+
 exports.createNews = async (newsData) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  let createdSummaries = [];
+  let createdReferences = [];
 
   try {
     const { summary, reference, ...newsFields } = newsData;
@@ -29,29 +72,36 @@ exports.createNews = async (newsData) => {
     }
 
     // Create summary
-    const createdSummaries = await newsSummaryModel.create(summary, {
-      session,
-    });
+    // createdSummaries = await newsSummaryModel.create(summary);
+    createdSummaries = await newsSummaryModel.insertMany(summary);
 
     // Create reference
-    const createdReferences = await newsReferenceModel.create(reference, {
-      session,
-    });
+    createdReferences = await newsReferenceModel.insertMany(reference);
 
     // Add summary and reference ObjectIds to news
     newsFields.summary = createdSummaries.map((item) => item._id);
-    newsFields.reference = createdReferences[0]._id;
+    newsFields.reference = createdReferences.map((item) => item._id);
 
     // Create news
-    const news = await newsModel.create([newsFields], { session });
-
-    await session.commitTransaction();
-    session.endSession();
+    const news = await newsModel.create(newsFields);
 
     return news[0];
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    // If an error occurs, handle it
+    console.error(`Failed to create news: ${error.message}`);
+
+    // Optional: Cleanup any partial data
+    if (createdSummaries.length > 0) {
+      await newsSummaryModel.deleteMany({
+        _id: { $in: createdSummaries.map((item) => item._id) },
+      });
+    }
+    if (createdReferences.length > 0) {
+      await newsReferenceModel.deleteMany({
+        _id: { $in: createdReferences.map((item) => item._id) },
+      });
+    }
+
     throw new Error(`Failed to create news: ${error.message}`);
   }
 };
@@ -90,6 +140,7 @@ exports.deleteNews = async (newsId) => {
 exports.getAllNews = async (query) => {
   const {
     category = null,
+    // tag = null,
     page = API_RESPONSE_PAGE,
     limit = API_RESPONSE_LIMIT,
   } = query;
@@ -99,18 +150,37 @@ exports.getAllNews = async (query) => {
 
   // If a category is provided, filter by category
   if (category) {
-    newsQuery.category = category;
+    if (!category) newsQuery.category = category;
+    // if (!tag) newsQuery.tags = { $in: tag };
+    // if (tag) {
+    //   const tagsArray = tag.map((t) => t.toLowerCase()); // Ensure tags are lowercase
+    //   newsQuery.tags = { $in: tagsArray }; // Match any document where at least one tag matches any string in the array
+    // }
   }
 
   return await newsModel
     .find(newsQuery)
+    .populate("summary", "title language")
+    .populate({
+      path: "media.options",
+      select: "url type",
+    })
     .skip((page - 1) * limit)
     .limit(limit)
     .exec();
 };
 
 exports.getNewsById = async (newsId) => {
-  return await newsModel.findById(newsId).exec();
+  return await newsModel
+    .findById(newsId)
+    .populate("summary", "title summary language")
+    .populate({
+      path: "media.options",
+      select: "url type thumbnailUrl",
+    })
+    .populate("category", "name")
+    .populate("reference", "url source author publishDate")
+    .exec();
 };
 
 exports.updateNews = async (newsId, news) => {

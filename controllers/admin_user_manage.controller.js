@@ -3,7 +3,7 @@ const user = require("../models/user.model");
 // admin => create user, update user, delete user, view all users, reset password (auto-generate password)
 
 async function handleCreateUser(req, res) {
-  if (req.user?.role !== "admin") return res.sendResponse(403, "Unauthorized");
+  // if (req.user?.role !== "admin") return res.sendResponse(403, "Unauthorized");
 
   const userInput = req.body;
   // validate if all required information is provided

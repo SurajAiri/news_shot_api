@@ -18,6 +18,9 @@ async function handleUserLogin(req, res) {
       if (!foundUser) {
         return res.sendResponse(404, "User not found");
       }
+      if (!foundUser.isActive) {
+        return res.sendResponse(401, "Account is not active");
+      }
 
       // check password
       const isMatch = await bcrypt.compare(password, foundUser.password);

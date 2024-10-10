@@ -21,7 +21,7 @@ const newsMediaSchema = new mongoose.Schema(
     url: {
       type: String,
       required: true,
-      match: /^https?:\/\/.*/,
+      // match: /^https?:\/\/.*/,
       unique: true,
     },
     type: { type: String, required: true, enum: ["image", "video"] },

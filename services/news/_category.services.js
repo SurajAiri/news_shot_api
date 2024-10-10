@@ -12,6 +12,10 @@ exports.getCategoryById = async (categoryId) => {
   return await newsCategoryModel.findById(categoryId).exec();
 };
 
+exports.getCategoryByName = async (categoryName) => {
+  return await newsCategoryModel.findOne({ name: categoryName }).exec();
+};
+
 exports.createCategory = async (categoryName) => {
   // Validate category name
   if (typeof categoryName !== "string" || categoryName.trim() === "") {

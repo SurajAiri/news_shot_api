@@ -1,4 +1,9 @@
+const { newsMediaModel } = require("../../models/news.model.js");
 const newsService = require("../../services/news/news.services.js");
+const {
+  API_RESPONSE_PAGE,
+  API_RESPONSE_LIMIT,
+} = require("../../utils/constant.js");
 
 exports.createMediaController = async (req, res) => {
   try {
@@ -17,11 +22,24 @@ exports.createMediaController = async (req, res) => {
 
 exports.getAllMediaController = async (req, res) => {
   try {
+    const {
+      tag = null,
+      page = API_RESPONSE_PAGE,
+      limit = API_RESPONSE_LIMIT,
+    } = req.query;
     const media = await newsService.getAllMedia(req.query);
     if (!media || media.length === 0) {
       res.sendResponse(404, "No media found");
     } else {
-      res.sendResponse(200, media);
+      let totalMedia = await newsMediaModel.countDocuments();
+      console.log(totalMedia);
+      res.sendResponse(200, media, "Success", {
+        page,
+        limit,
+        totalMedia,
+        totalPages: Math.ceil(totalMedia / limit),
+        tag,
+      });
     }
   } catch (error) {
     res.sendResponse(500, error.message);

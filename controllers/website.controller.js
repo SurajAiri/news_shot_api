@@ -86,6 +86,8 @@ const handleGetAllWebsite = async (req, res) => {
       currentPage: pageNum,
       perPage: limitNum,
     };
+    if (!websites || websites.length === 0)
+      return res.sendResponse(404, "No websites found");
 
     // Send response with metadata
     return res.sendResponse(

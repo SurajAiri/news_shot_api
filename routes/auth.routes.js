@@ -9,6 +9,6 @@ router = express.Router();
 
 router.post("/login", handleUserLogin);
 router.post("/change-password", handleUserPasswordChange);
-router.patch("/update", handleUserUpdate);
+router.patch("/user", handleUserUpdate);
 
 module.exports = router;
